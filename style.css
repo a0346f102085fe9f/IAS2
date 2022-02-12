@@ -1,0 +1,44 @@
+body {
+	font-family: sans-serif;
+	font-size: 14pt;
+}
+
+main {
+	max-width: 48em;
+	margin: 0em auto;
+}
+
+button {
+	display: block;
+}
+
+input {
+	width: 100%;
+
+	font-family: inherit;
+	font-size: inherit;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+.search_result {
+	line-height: 1.25;
+}
+
+.flr {
+	float: right;
+}
+
+.hide {
+	display: none;
+}
+
+.clickable {
+	cursor: pointer;
+}

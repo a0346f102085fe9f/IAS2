@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Search R&D</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<script type="text/javascript" src="utils.js"></script>
+	<script type="text/javascript" src="splade_tools.js"></script>
+	<script type="text/javascript" src="Tokenizer/vocab.js"></script>
+	<script type="text/javascript" src="Tokenizer/wordpiecetokenizer.js"></script>
+	<script type="text/javascript" src="Tokenizer/bert-tokenizer.js"></script>
+	<script type="text/javascript" src="search.js"></script>
+</head>
+<body>
+	<code></code>
+
+	<main>
+		<noscript>JavaScript required, sorry.</noscript>
+	</main>
+
+	<script type="text/javascript">
+		var dl_options = add("div", document.body.children[1], "Search needs one of the indexes to work:")
+
+		var dl1 = add("button", dl_options, "Pile 2009-2013 [282M]")
+		var dl2 = add("button", dl_options, "Pile 2014-2017 [440M]")
+		var dl3 = add("button", dl_options, "Pile 2018-2020 [112M]")
+
+		// You can open this URL inside your browser to get a file listing
+		var base_url = "https://cloudflare-ipfs.com/ipfs/QmPxqeC7yU429B8Tz11as3uKQ6N8jjR6mrRqVbuXuZdfuL"
+
+		dl1.onclick = function() { dl_options.remove(); download_index(base_url + "/Pile 2009-2013") }
+		dl2.onclick = function() { dl_options.remove(); download_index(base_url + "/Pile 2014-2017") }
+		dl3.onclick = function() { dl_options.remove(); download_index(base_url + "/Pile 2018-2020") }
+	</script>
+</body>
+</html>
