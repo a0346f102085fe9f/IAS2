@@ -53,7 +53,7 @@ function populate_views() {
 //  "keys": [ Uint16 ],
 //  "values": [ Float32 ]
 // }
-function dot(a, b) {
+function dot(a, b, strict_intersect = false) {
 	var sum = 0.0
 
 	// Try to select the shorter sequence for the loop
@@ -84,6 +84,10 @@ function dot(a, b) {
 
 		if (idx_l <= 30522) {
 			sum += sv[idx_s] * lv[idx_l]
+		} else {
+			// Key not found
+			if (strict_intersect)
+				return 0.0
 		}
 	}
 
@@ -92,8 +96,8 @@ function dot(a, b) {
 
 // Cosine similarity is absolutely necessary for SPLADE
 // It just doesn't work at all if you only do the dot()
-function cosine_similarity(a, b) {
-	return dot(a, b) / (a.magnitude * b.magnitude)
+function cosine_similarity(a, b, strict_intersect = false) {
+	return dot(a, b, strict_intersect) / (a.magnitude * b.magnitude)
 }
 
 
@@ -157,18 +161,22 @@ function find_similar_query(tokens) {
 	var a = { "elements": distinct_total, "magnitude": mag, "keys": k, "values": v }
 	var results = []
 
-	log(a)
-
 	for (var target in idx) {
 		var b = idx[target]
-		var ab = cosine_similarity(a, b)
+		var ab = cosine_similarity(a, b, true)
 		
-		results.push( { title: target, score: ab } )
+		if (ab > 0) {
+			results.push( { title: target, score: ab } )
+		} else {
+			// Discarded
+		}
 	}
 
 	var sort_fn = function(a, b) { return b.score - a.score }
 
 	results.sort(sort_fn)
+
+	log("Returning", results.length, "entries")
 	
 	return results
 }
