@@ -62,10 +62,9 @@ function show_more_results(number) {
 function display_result(entry) {
 	var entry_div = add("div", results_div)
 	var score = add("div", entry_div)
-	var rxp = /-(.+)\.txt$/
-
-	var id = rxp.exec(entry.title)[1]
 	var link = add("a", entry_div, entry.title)
+
+	var id = entry.title.slice(-12).slice(0, 8)
 
 	link.href = "https://poneb.in/" + id
 
