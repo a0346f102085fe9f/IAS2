@@ -13,6 +13,8 @@ button {
 }
 
 input {
+	box-sizing: border-box;
+
 	width: 100%;
 
 	font-family: inherit;
