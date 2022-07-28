@@ -20,18 +20,57 @@
 	</main>
 
 	<script type="text/javascript">
-		var dl_options = add("div", document.body.children[1], "Search needs one of the indexes to work:")
+		var dl_options = add("div", document.body.children[1], "")
 
-		var dl1 = add("button", dl_options, "Pile 2009-2013 [282M]")
-		var dl2 = add("button", dl_options, "Pile 2014-2017 [440M]")
-		var dl3 = add("button", dl_options, "Pile 2018-2020 [112M]")
+		function add_index(url, description, link_fn) {
+			var button = add("button", dl_options, description)
 
-		// You can open this URL inside your browser to get a file listing
-		var base_url = "https://cloudflare-ipfs.com/ipfs/QmPxqeC7yU429B8Tz11as3uKQ6N8jjR6mrRqVbuXuZdfuL"
+			button.onclick = function() {
+				dl_options.remove()
+				set_link_fn(link_fn)
+				download_index(url)
+			}
+		}
 
-		dl1.onclick = function() { dl_options.remove(); download_index(base_url + "/Pile 2009-2013") }
-		dl2.onclick = function() { dl_options.remove(); download_index(base_url + "/Pile 2014-2017") }
-		dl3.onclick = function() { dl_options.remove(); download_index(base_url + "/Pile 2018-2020") }
+		add("div", dl_options).style.height = "2em"
+		add("div", dl_options, "<b>Welcome!</b>")
+		add("p", dl_options, "This is an alternative search engine for Fimfiction/Fimfetch and poneb.in. Use it to rediscover long-forgotten stories or to datamine for prompts to use in AI storytelling games.")
+		add("p", dl_options, "Story ratings, titles and descriptions are not considered. This search relies only on the contents of the story. SPLADEv2 neural network is used to produce embeddings out of stories. See the <a href=\"https://github.com/a0346f102085fe9f/IAS2\">GitHub page</a> for more technical details.")
+		add("p", dl_options, "Click one of the buttons below.")
+		add("div", dl_options).style.height = "2em"
+
+		// You can open these URLs inside your browser to get a file listing
+		var ponebin_base_url = 		"https://cloudflare-ipfs.com/ipfs/QmPxqeC7yU429B8Tz11as3uKQ6N8jjR6mrRqVbuXuZdfuL"
+		var fimfarchive_base_url = 	"https://cloudflare-ipfs.com/ipfs/QmUsG8DV98FE5UFswja7fAp7VhvNcs2cmtTx91dwixNKTF"
+
+		add("h3", dl_options, "PONEB.IN")
+		add("hr", dl_options)
+
+		add_index(ponebin_base_url + "/Pile 2009-2013", "<h3>INDEX A</h3><div>Years 2009-2013</div><div>[282M]</div>", ponebin_link_fn)
+		add_index(ponebin_base_url + "/Pile 2014-2017", "<h3>INDEX B</h3><div>Years 2014-2017</div><div>[440M]</div>", ponebin_link_fn)
+		add_index(ponebin_base_url + "/Pile 2018-2020", "<h3>INDEX C</h3><div>Years 2018-2020</div><div>[112M]</div>", ponebin_link_fn)
+
+		add("div", dl_options).style.height = "2em"
+		add("h3", dl_options, "FIMFARCHIVE").title = "Fimfarchive 20220601"
+		add("hr", dl_options)
+
+		add_index(fimfarchive_base_url + "/Fimfarchive 1 30k", "<h3>INDEX A</h3><div>Aug 2011-Nov 2012</div><div>[449M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 2 30k", "<h3>INDEX B</h3><div>Nov 2012-Sep 2013</div><div>[414M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 3 30k", "<h3>INDEX C</h3><div>Sep 2013-Jul 2014</div><div>[367M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 4 30k", "<h3>INDEX D</h3><div>Jul 2014-Aug 2015</div><div>[369M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 5 30k", "<h3>INDEX E</h3><div>Aug 2015-Feb 2017</div><div>[379M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 6 30k", "<h3>INDEX F</h3><div>Feb 2017-Aug 2019</div><div>[434M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 7 24k", "<h3>INDEX G</h3><div>Aug 2019-Jun 2022</div><div>[347M]</div>", fimfetch_link_fn)
+
+		function ponebin_link_fn(title) {
+			var id = title.slice(-12).slice(0, 8)
+			return "https://poneb.in/" + id
+		}
+
+		function fimfetch_link_fn(title) {
+			var id = title.split("-").pop().slice(0, -4)
+			return "https://fimfetch.net/story/" + id
+		}
 	</script>
 </body>
 </html>

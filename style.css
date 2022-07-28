@@ -9,7 +9,16 @@ main {
 }
 
 button {
-	display: block;
+	background-color: inherit;
+	border: 1px solid black;
+	margin: .15em;
+	cursor: pointer;
+	text-align: left;
+}
+
+button:hover {
+	background-color: black;
+	color: white;
 }
 
 input {
@@ -19,6 +28,22 @@ input {
 
 	font-family: inherit;
 	font-size: inherit;
+}
+
+code {
+	font-size: 10pt;
+}
+
+pre {
+	margin: 0em;
+}
+
+hr {
+	border: 1px solid black;
+}
+
+h3 {
+	margin: 0em;
 }
 
 a {

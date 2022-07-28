@@ -3,8 +3,10 @@
 var tokenizer = new BertTokenizer()
 
 var input = null
-var disp1 = null
-var disp2 = null
+var disp_required_set = null
+var disp_required_txt = null
+var disp_rejected_set = null
+var disp_rejected_txt = null
 var results = []
 var results_div = null
 var more = null
@@ -19,8 +21,11 @@ function init_search() {
 	input.placeholder = "Search..."
 	input.oninput = search_timeout_reset
 
-	disp1 = add("div", main, "[ Token IDs ]")
-	disp2 = add("div", main, "[ Token text ]")
+	disp_required_set = add("div", main, "[ Token IDs ]")
+	disp_required_txt = add("div", main, "[ Token text ]")
+	disp_rejected_set = add("div", main, "[ Rejected token IDs ]")
+	disp_rejected_txt = add("div", main, "[ Rejected token text ]")
+
 	results_div = add("div", main)
 	more = add("button", main, "Show 100 more")
 	more.classList.add("hide")
@@ -39,12 +44,29 @@ function search_timeout_reset() {
 }
 
 function run_search() {
-	var tokens = tokenizer.tokenize(input.value)
+	var rejected_words_rxp = /-\S+/g
+	var rejected_word_arr = []
+	var query = input.value
 
-	disp1.innerHTML = "[ " + tokens.join(", ") + " ]"
-	disp2.innerHTML = "[ " + tokenizer.convertIdsToTokens(tokens).join(", ") + " ]"
+	function rejected_words_fn(match) {
+		rejected_word_arr.push(match.slice(1))
+		return ""
+	}
 
-	results = find_similar_query(tokens)
+	query = query.replace(rejected_words_rxp, rejected_words_fn).trim()
+
+	var required = tokenizer.tokenize(query)
+	var rejected = []
+
+	if (rejected_word_arr.length > 0)
+		rejected = tokenizer.tokenize(rejected_word_arr.join(" "))
+
+	disp_required_set.innerHTML = "[ " + required.join(", ") + " ]"
+	disp_required_txt.innerHTML = "[ " + tokenizer.convertIdsToTokens(required).join(", ") + " ]"
+	disp_rejected_set.innerHTML = "[ " + rejected.join(", ") + " ]"
+	disp_rejected_txt.innerHTML = "[ " + tokenizer.convertIdsToTokens(rejected).join(", ") + " ]"
+
+	results = find_similar_query( imagine_idx_entry(required, rejected) )
 
 	more.classList.remove("hide")
 	add("div", results_div, "<br>SEARCHBOX QUERY:")
@@ -59,22 +81,27 @@ function show_more_results(number) {
 		display_result(results.shift())
 }
 
+var link_fn = null
+
+function set_link_fn(fn) {
+	link_fn = fn
+}
+
 function display_result(entry) {
-	var entry_div = add("div", results_div)
-	var score = add("div", entry_div)
-	var link = add("a", entry_div, entry.title)
+	var details = add("details", results_div)
+	var summary = add("summary", details)
 
-	var id = entry.title.slice(-12).slice(0, 8)
+	var link = add("a", summary, entry.title)
 
-	link.href = "https://poneb.in/" + id
+	link.href = link_fn(entry.title)
 
-	entry_div.classList.add("search_result")
-	score.classList.add("flr")
-	score.classList.add("clickable")
+	var more = add("button", details, "Find similar")
 
-	score.innerHTML = Math.round(entry.score * 100) + "%"
+	more.classList.add("flr")
 
-	score.onclick = function() {
+	var about = add("div", details, "Score: " + Math.round(entry.score * 100) + "%<br><br>Best described with: " + predict_best_query(entry.title))
+
+	more.onclick = function() {
 		results = find_similar_to(entry.title)
 		results_div.innerHTML = ""
 		add("div", results_div, "<br>FIND SIMILAR QUERY:")
@@ -97,6 +124,7 @@ function download_index(url) {
 		if (done_alerts === 3) {
 			document.body.children[0].innerHTML = ""
 			populate_views()
+			build_total_sums()
 			init_search()
 		}
 	}
