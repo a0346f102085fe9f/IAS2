@@ -5,6 +5,7 @@ The indexer is in [this repository](https://github.com/a0346f102085fe9f/IndexerS
 
 Thanks go out to the authors of:
 - [SPLADE v2](https://github.com/naver/splade)
+- [bert-tokenizer](https://www.jsdelivr.com/package/npm/bert-tokenizer)
 - The pastebin scrape and poneb.in
 - Fimfarchive, Fimfetch and Fimfiction itself
 
