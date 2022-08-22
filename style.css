@@ -1,6 +1,7 @@
 body {
+	overflow-wrap: break-word;
 	font-family: sans-serif;
-	font-size: 14pt;
+	font-size: 13pt;
 }
 
 main {
@@ -8,10 +9,20 @@ main {
 	margin: 0em auto;
 }
 
+details > div {
+	margin: 0em 1em;
+}
+
+summary {
+	font-size: 14pt;
+	cursor: pointer;
+}
+
 button {
 	background-color: inherit;
 	border: 1px solid black;
 	margin: .15em;
+	padding: .1em .33em;
 	cursor: pointer;
 	text-align: left;
 }
@@ -30,12 +41,13 @@ input {
 	font-size: inherit;
 }
 
-code {
+table {
+	font-family: monospace;
 	font-size: 10pt;
 }
 
-pre {
-	margin: 0em;
+td {
+	padding-right: 2em;
 }
 
 hr {

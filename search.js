@@ -95,16 +95,28 @@ function display_result(entry) {
 
 	link.href = link_fn(entry.title)
 
-	var more = add("button", details, "Find similar")
+	var about = add("div", details)
 
+	var description = add("div", about, "Best described with: " + predict_best_query(entry.title))
+	add("br", about)
+	var more_tf_idf = add("button", about, "Find similar TF-IDF")
+	var more = add("button", about, "Find similar")
 	more.classList.add("flr")
-
-	var about = add("div", details, "Score: " + Math.round(entry.score * 100) + "%<br><br>Best described with: " + predict_best_query(entry.title))
+	more_tf_idf.classList.add("flr")
+	var score = add("div", about, "Score: " + Math.round(entry.score * 100) + "%")
+	add("br", about)
 
 	more.onclick = function() {
 		results = find_similar_to(entry.title)
 		results_div.innerHTML = ""
 		add("div", results_div, "<br>FIND SIMILAR QUERY:")
+		show_more_results(100)
+	}
+
+	more_tf_idf.onclick = function() {
+		results = find_similar_to(entry.title, true)
+		results_div.innerHTML = ""
+		add("div", results_div, "<br>TF-IDF FIND SIMILAR QUERY:")
 		show_more_results(100)
 	}
 }

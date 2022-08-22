@@ -59,7 +59,7 @@ function populate_views() {
 
 // We have the following structure
 // {
-//	"elements": 1420,
+//	"dimensions": 1420,
 //	"magnitude": 70.5,
 //  "keys": [ Uint16 ],
 //  "values": [ Float32 ]
@@ -117,9 +117,12 @@ function cosine_similarity(a, b, strict_intersect = false) {
 //	"file1.txt": {},
 //	"file2.txt": {},
 // }
-function find_similar_to(title) {
+function find_similar_to(title, tf_idf = false) {
 	var results = []
 	var a = idx[title]
+
+	if (tf_idf)
+		a = apply_tf_idf(a)
 
 	for (var target in idx) {
 		if (target === title)
@@ -182,7 +185,7 @@ function imagine_idx_entry(required, rejected) {
 	// Take square root
 	var mag = dot**0.5
 
-	return { "elements": distinct_total, "magnitude": mag, "keys": k, "values": v }
+	return { "dimensions": distinct_total, "magnitude": mag, "keys": k, "values": v }
 }
 
 // Takes an imaginary index entry as produced by imagine_idx_entry()
@@ -259,4 +262,25 @@ function predict_best_query(title) {
 		tokens.push(entry.token)
 
 	return "[ " + tokenizer.convertIdsToTokens(tokens).join(", ") + " ]"
+}
+
+// Takes an index entry
+function apply_tf_idf(entry) {
+	var values = new Float32Array(entry.dimensions)
+	var dot = 0.0
+
+	for (var i = 0; i < entry.dimensions; i++) {
+		var k = entry.keys[i]
+		var v = entry.values[i]
+
+		var value = v * v/total_sums[k]
+
+		values[i] = value
+		dot += value**2
+	}
+
+	// Take square root
+	var mag = dot**0.5
+
+	return { "dimensions": entry.dimensions, "magnitude": mag, "keys": entry.keys, "values": values, "expkeys": entry.expkeys }
 }
