@@ -141,43 +141,27 @@ function find_similar_to(title, tf_idf = false) {
 	return results
 }
 
-// Takes an array of token IDs as produced by BERT tokenizer, twice
-function imagine_idx_entry(required, rejected) {
-	var distinct_total = 0
-	var distinct = {}
+// Takes an object where keys are BERT token IDs and values are weights:
+// { 2015: 0.0, 20681: 1.0, 27940: -1.0 }
+function imagine_idx_entry(vec) {
+	var total = Object.keys(vec).length
 
-	// Assign more value to recurring required tokens
-	for (var id of required) {
-		if (id in distinct) {
-			distinct[id]++
-		} else {
-			distinct[id] = 1
-			distinct_total++
-		}
-	}
-
-	// Assign evermore significant negative value to recurring rejected tokens
-	// Some funky behaviors:
-	// - "semiconductors -lobsters" will lead to "s" having a value of 0.0
-	// - "ass -ass" will lead to "ass" with a value of 0.0
-	for (var id of rejected) {
-		if (id in distinct) {
-			distinct[id]--
-		} else {
-			distinct[id] = -1
-			distinct_total++
-		}
-	}
-
+	var expvalues = new Float32Array(30522)
+	var k = new Uint16Array(total)
+	var v = new Float32Array(total)
 	var dot = 0.0
-	var k = new Uint16Array(distinct_total)
-	var v = new Float32Array(distinct_total)
 	var i = 0
 
-	for (var id in distinct) {
-		k[i] = id
-		v[i] = distinct[id]
-		dot += distinct[id]**2
+	expvalues.fill(0.0)
+
+	for (var id in vec) {
+		var _k = parseInt(id)
+		var _v = vec[id]
+
+		k[i] = _k
+		v[i] = _v
+		dot += _v**2
+		expvalues[_k] = _v
 
 		i++
 	}
@@ -185,7 +169,17 @@ function imagine_idx_entry(required, rejected) {
 	// Take square root
 	var mag = dot**0.5
 
-	return { "dimensions": distinct_total, "magnitude": mag, "keys": k, "values": v }
+	return { "dimensions": total, "magnitude": mag, "keys": k, "values": v, "expvalues": expvalues }
+}
+
+// Takes an imaginary index entry as produced by imagine_idx_entry() and a real index entry
+function is_stray(a, b) {
+	for (var i = 0; i < b.stray.length; i++) {
+		if (a.expvalues[b.stray[i]] > 0.0)
+			return true
+	}
+
+	return false
 }
 
 // Takes an imaginary index entry as produced by imagine_idx_entry()
@@ -197,7 +191,7 @@ function find_similar_query(a) {
 		var ab = cosine_similarity(a, b, true)
 		
 		if (ab != 0.0) {
-			results.push( { title: target, score: ab } )
+			results.push( { title: target, score: ab, is_stray: is_stray(a, b) } )
 		} else {
 			// Discarded
 		}
@@ -254,14 +248,7 @@ function predict_best_query(title) {
 
 	results.sort(sort_fn)
 
-	results = results.slice(0, 50)
-
-	var tokens = []
-
-	for (var entry of results)
-		tokens.push(entry.token)
-
-	return "[ " + tokenizer.convertIdsToTokens(tokens).join(", ") + " ]"
+	return results
 }
 
 // Takes an index entry

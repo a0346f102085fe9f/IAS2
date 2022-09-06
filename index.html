@@ -64,12 +64,12 @@
 
 		function ponebin_link_fn(title) {
 			var id = title.slice(-12).slice(0, 8)
-			return "https://poneb.in/" + id
+			return "[ <a href=\"https://poneb.in/" + id + "\">poneb.in</a> ]"
 		}
 
 		function fimfetch_link_fn(title) {
 			var id = title.split("-").pop().slice(0, -4)
-			return "https://fimfetch.net/story/" + id
+			return "[ <a href=\"https://fimfiction.net/story/" + id + "\">Fimfiction</a> ] [ <a href=\"https://fimfetch.net/story/" + id + "\">Fimfetch</a> ]"
 		}
 	</script>
 </body>

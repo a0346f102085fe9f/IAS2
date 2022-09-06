@@ -3,10 +3,7 @@
 var tokenizer = new BertTokenizer()
 
 var input = null
-var disp_required_set = null
-var disp_required_txt = null
-var disp_rejected_set = null
-var disp_rejected_txt = null
+var disp = null
 var results = []
 var results_div = null
 var more = null
@@ -21,10 +18,9 @@ function init_search() {
 	input.placeholder = "Search..."
 	input.oninput = search_timeout_reset
 
-	disp_required_set = add("div", main, "[ Token IDs ]")
-	disp_required_txt = add("div", main, "[ Token text ]")
-	disp_rejected_set = add("div", main, "[ Rejected token IDs ]")
-	disp_rejected_txt = add("div", main, "[ Rejected token text ]")
+	disp = add("div", main, "Protip: syntax like -word, 5*word, -5*word is supported.") 
+
+	disp.classList.add("breakdown")
 
 	results_div = add("div", main)
 	more = add("button", main, "Show 100 more")
@@ -44,29 +40,12 @@ function search_timeout_reset() {
 }
 
 function run_search() {
-	var rejected_words_rxp = /-\S+/g
-	var rejected_word_arr = []
 	var query = input.value
+	var qtvec = tvec(parse(query))
 
-	function rejected_words_fn(match) {
-		rejected_word_arr.push(match.slice(1))
-		return ""
-	}
+	disp.innerHTML = tvecstr(qtvec)
 
-	query = query.replace(rejected_words_rxp, rejected_words_fn).trim()
-
-	var required = tokenizer.tokenize(query)
-	var rejected = []
-
-	if (rejected_word_arr.length > 0)
-		rejected = tokenizer.tokenize(rejected_word_arr.join(" "))
-
-	disp_required_set.innerHTML = "[ " + required.join(", ") + " ]"
-	disp_required_txt.innerHTML = "[ " + tokenizer.convertIdsToTokens(required).join(", ") + " ]"
-	disp_rejected_set.innerHTML = "[ " + rejected.join(", ") + " ]"
-	disp_rejected_txt.innerHTML = "[ " + tokenizer.convertIdsToTokens(rejected).join(", ") + " ]"
-
-	results = find_similar_query( imagine_idx_entry(required, rejected) )
+	results = find_similar_query( imagine_idx_entry(qtvec) )
 
 	more.classList.remove("hide")
 	add("div", results_div, "<br>SEARCHBOX QUERY:")
@@ -87,17 +66,28 @@ function set_link_fn(fn) {
 	link_fn = fn
 }
 
+// Turn token IDs to words and discard anything that starts with a ▁
+function predict_best_pretty(tokens) {
+	var words = []
+
+	while (words.length < 50 && tokens.length > 0) {
+		var word = tokenizer.convertIdsToTokens( [ tokens.shift().token ] )[0]
+
+		if (word.startsWith("▁"))
+			continue
+
+		words.push(word)
+	}
+
+	return "[ " + words.join(", ") + " ]"
+}
+
 function display_result(entry) {
 	var details = add("details", results_div)
-	var summary = add("summary", details)
-
-	var link = add("a", summary, entry.title)
-
-	link.href = link_fn(entry.title)
-
+	var summary = add("summary", details, entry.title)
+	var links = add("div", details, link_fn(entry.title))
 	var about = add("div", details)
-
-	var description = add("div", about, "Best described with: " + predict_best_query(entry.title))
+	var description = add("div", about, "Best described with: " + predict_best_pretty(predict_best_query(entry.title)))
 	add("br", about)
 	var more_tf_idf = add("button", about, "Find similar TF-IDF")
 	var more = add("button", about, "Find similar")
@@ -105,6 +95,11 @@ function display_result(entry) {
 	more_tf_idf.classList.add("flr")
 	var score = add("div", about, "Score: " + Math.round(entry.score * 100) + "%")
 	add("br", about)
+
+	if (entry.is_stray) {
+		summary.classList.add("stray")
+		summary.title = "At least some of the keywords only implied"
+	}
 
 	more.onclick = function() {
 		results = find_similar_to(entry.title)
@@ -119,6 +114,90 @@ function display_result(entry) {
 		add("div", results_div, "<br>TF-IDF FIND SIMILAR QUERY:")
 		show_more_results(100)
 	}
+}
+
+
+//
+// EXPRESSION PARSER
+//
+
+// Stage 1: search-and-replace simplify
+// Stage 2: split by spaces
+// Stage 3: extract weights
+function parse(expr) {
+	var simp_rxp_1 = /\s*\*\s*/g
+	var simp_rxp_2 = /-\s*/g
+	var simple = expr.replace(simp_rxp_1, "*").replace(simp_rxp_2, "-")
+
+	var tokens = simple.split(" ")
+	var vec = {}
+
+	for (var token of tokens) {
+		if (token === "") continue
+
+		var k = 1.0 // default k
+
+		if (token.startsWith("-")) {
+			k = -k
+			token = token.slice(1)
+		}
+
+		var pieces = token.split("*")
+		var word = token
+
+		if (pieces.length > 1) {
+			var kk = parseFloat(pieces[0])
+
+			if ( isNaN(kk) ) {
+				// Nothing
+			} else {
+				pieces.shift()
+				word = pieces.join("*")
+				k = k * kk
+			}
+		}
+
+		if (word in vec === false)
+			vec[word] = 0.0
+
+		vec[word] += k
+	}
+
+	return vec
+}
+
+// Takes this:
+// { semiconductors: 1, lobsters: -1 }
+// Produces this:
+// { 2015: 0, 20681: 1, 27940: -1 }
+function tvec(vec) {
+	var tvec = {}
+
+	for (var word in vec) {
+		var weight = vec[word]
+		var tokens = tokenizer.tokenize(word)
+
+		for (var token of tokens) {
+			token = token + "x" // A hack to preserve ordering
+
+			if (token in tvec === false)
+				tvec[token] = 0.0
+
+			tvec[token] += weight
+		}
+	}
+	
+	return tvec
+}
+
+function tvecstr(vec) {
+	var entries = []
+
+	for (var id in vec) {
+		entries.push( tokenizer.convertIdsToTokens([parseInt(id)])[0] + ": " + vec[id] )
+	}
+
+	return "{ " + entries.join(", ") + " }"
 }
 
 
