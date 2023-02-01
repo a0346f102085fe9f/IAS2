@@ -41,7 +41,7 @@
 
 		// You can open these URLs inside your browser to get a file listing
 		var ponebin_base_url = 		"https://cloudflare-ipfs.com/ipfs/QmPxqeC7yU429B8Tz11as3uKQ6N8jjR6mrRqVbuXuZdfuL"
-		var fimfarchive_base_url = 	"https://cloudflare-ipfs.com/ipfs/QmUsG8DV98FE5UFswja7fAp7VhvNcs2cmtTx91dwixNKTF"
+		var fimfarchive_base_url = 	"https://cloudflare-ipfs.com/ipfs/QmYLw4oGovTWT9RH65KkBsLUUVJEyjR9Ptbg7f7DbSuEnf"
 
 		add("h3", dl_options, "PONEB.IN")
 		add("hr", dl_options)
@@ -51,16 +51,16 @@
 		add_index(ponebin_base_url + "/Pile 2018-2020", "<h3>INDEX C</h3><div>Years 2018-2020</div><div>[112M]</div>", ponebin_link_fn)
 
 		add("div", dl_options).style.height = "2em"
-		add("h3", dl_options, "FIMFARCHIVE").title = "Fimfarchive 20220601"
+		add("h3", dl_options, "FIMFARCHIVE").title = "Fimfarchive 20221201"
 		add("hr", dl_options)
 
-		add_index(fimfarchive_base_url + "/Fimfarchive 1 30k", "<h3>INDEX A</h3><div>Aug 2011-Nov 2012</div><div>[449M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 1 30k", "<h3>INDEX A</h3><div>Aug 2011-Nov 2012</div><div>[448M]</div>", fimfetch_link_fn)
 		add_index(fimfarchive_base_url + "/Fimfarchive 2 30k", "<h3>INDEX B</h3><div>Nov 2012-Sep 2013</div><div>[414M]</div>", fimfetch_link_fn)
-		add_index(fimfarchive_base_url + "/Fimfarchive 3 30k", "<h3>INDEX C</h3><div>Sep 2013-Jul 2014</div><div>[367M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 3 30k", "<h3>INDEX C</h3><div>Sep 2013-Jul 2014</div><div>[366M]</div>", fimfetch_link_fn)
 		add_index(fimfarchive_base_url + "/Fimfarchive 4 30k", "<h3>INDEX D</h3><div>Jul 2014-Aug 2015</div><div>[369M]</div>", fimfetch_link_fn)
-		add_index(fimfarchive_base_url + "/Fimfarchive 5 30k", "<h3>INDEX E</h3><div>Aug 2015-Feb 2017</div><div>[379M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 5 30k", "<h3>INDEX E</h3><div>Aug 2015-Feb 2017</div><div>[378M]</div>", fimfetch_link_fn)
 		add_index(fimfarchive_base_url + "/Fimfarchive 6 30k", "<h3>INDEX F</h3><div>Feb 2017-Aug 2019</div><div>[434M]</div>", fimfetch_link_fn)
-		add_index(fimfarchive_base_url + "/Fimfarchive 7 24k", "<h3>INDEX G</h3><div>Aug 2019-Jun 2022</div><div>[347M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 7 27k", "<h3>INDEX G</h3><div>Aug 2019-Jun 2022</div><div>[396M]</div>", fimfetch_link_fn)
 
 		function ponebin_link_fn(title) {
 			var id = title.slice(-12).slice(0, 8)
