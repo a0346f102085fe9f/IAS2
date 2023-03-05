@@ -186,7 +186,7 @@ function tvec(vec) {
 			tvec[token] += weight
 		}
 	}
-	
+
 	return tvec
 }
 
@@ -194,7 +194,9 @@ function tvecstr(vec) {
 	var entries = []
 
 	for (var id in vec) {
-		entries.push( tokenizer.convertIdsToTokens([parseInt(id)])[0] + ": " + vec[id] )
+		var word = tokenizer.convertIdsToTokens([parseInt(id)])[0].replace("##", "_")
+
+		entries.push(word + ": " + vec[id])
 	}
 
 	return "{ " + entries.join(", ") + " }"
@@ -220,7 +222,7 @@ function download_index(url) {
 		}
 	}
 
-	var load_fn_1 = function(response) { 
+	var load_fn_1 = function(response) {
 		idx = response
 		done_alert()
 	}
