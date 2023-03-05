@@ -73,7 +73,7 @@ function predict_best_pretty(tokens) {
 	while (words.length < 50 && tokens.length > 0) {
 		var word = tokenizer.convertIdsToTokens( [ tokens.shift().token ] )[0]
 
-		if (word.startsWith("▁"))
+		if (word.startsWith("##"))
 			continue
 
 		words.push(word)

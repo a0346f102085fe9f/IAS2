@@ -26,11 +26,7 @@ var Trie = (function () {
     }
     Trie.prototype.insert = function (word, score, index) {
         var node = this.root;
-        var symbols = [];
-        for (var _i = 0, word_1 = word; _i < word_1.length; _i++) {
-            var symbol = word_1[_i];
-            symbols.push(symbol);
-        }
+        var symbols = Array.from(word);
         for (var i = 0; i < symbols.length; i++) {
             if (!node.children[symbols[i]]) {
                 node.children[symbols[i]] = new TrieNode(symbols[i]);
@@ -57,26 +53,22 @@ var Trie = (function () {
 }());
 var WordPieceTokenizer = (function () {
     function WordPieceTokenizer() {
-        this.separator = '\u2581';
+        this.separator = '##';
         this.UNK_INDEX = 100;
     }
     WordPieceTokenizer.prototype.load = function () {
-        console.log("PATCHED OUT")
         this.vocab = window.tokens;
         this.trie = new Trie();
-        this.trie.insert('[CLS]', 1, 101);
-        this.trie.insert('[SEP]', 1, 102);
-        for (var i = 999; i < this.vocab.length; i++) {
+        for (var i = 0; i < this.vocab.length; i++) {
             var word = this.vocab[i];
             this.trie.insert(word, 1, i);
         }
     };
     WordPieceTokenizer.prototype.processInput = function (text) {
-        var _this = this;
         var words = text.split(' ');
         return words.map(function (word) {
             if (word !== '[CLS]' && word !== '[SEP]') {
-                return _this.separator + word.toLowerCase().normalize('NFKC');
+                return word.toLowerCase().normalize('NFKC');
             }
             return word;
         });
@@ -85,11 +77,7 @@ var WordPieceTokenizer = (function () {
         var outputTokens = [];
         var words = this.processInput(text);
         for (var i = 0; i < words.length; i++) {
-            var chars = [];
-            for (var _i = 0, _a = words[i]; _i < _a.length; _i++) {
-                var symbol = _a[_i];
-                chars.push(symbol);
-            }
+            var chars = Array.from(words[i]);
             var isUnknown = false;
             var start = 0;
             var subTokens = [];
@@ -99,7 +87,7 @@ var WordPieceTokenizer = (function () {
                 var currIndex = void 0;
                 while (start < end) {
                     var substr = chars.slice(start, end).join('');
-                    var match = this.trie.find(substr);
+                    var match = this.trie.find((start > 0 ? this.separator : "") + substr);
                     if (match != null && match.end) {
                         currIndex = match.getWord()[2];
                         break;

@@ -83,14 +83,7 @@ var BertTokenizer = (function () {
     BertTokenizer.prototype.convertIdsToTokens = function (ids) {
         var _this = this;
         var tokens = [];
-        function swap_(str) {
-            if (str[0] == "▁") {
-                return str.slice(1)
-            } else {
-                return "▁" + str
-            }
-        }
-        ids.forEach(function (id) { tokens.push(swap_(_this.tokenizer.vocab[id])); });
+        ids.forEach(function (id) { tokens.push(_this.tokenizer.vocab[id]); });
         return tokens;
     };
     BertTokenizer.prototype.convertTokensToId = function (token) {
