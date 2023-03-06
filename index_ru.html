@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Search R&D</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<script type="text/javascript" src="utils.js"></script>
+	<script type="text/javascript" src="splade_tools.js"></script>
+	<script type="text/javascript" src="Tokenizer/vocab_ru.js"></script>
+	<script type="text/javascript" src="Tokenizer/wordpiecetokenizer.js"></script>
+	<script type="text/javascript" src="Tokenizer/bert-tokenizer.js"></script>
+	<script type="text/javascript" src="search.js"></script>
+</head>
+<body>
+	<table></table>
+
+	<main>
+		<noscript>Увы, требуется JavaScript.</noscript>
+	</main>
+
+	<script type="text/javascript">
+		var dl_options = add("div", document.body.children[1], "")
+
+		function add_index(url, description, link_fn) {
+			var button = add("button", dl_options, description)
+
+			button.onclick = function() {
+				dl_options.remove()
+				set_link_fn(link_fn)
+				download_index(url)
+			}
+		}
+
+		add("div", dl_options).style.height = "2em"
+		add("div", dl_options, "<b>Добро пожаловать!</b>")
+		add("p", dl_options, "Это альтернативный поисковый движок для Ponyfiction, а также <a href=\"/\">Fimfiction/Fimfetch, poneb.in и ponepaste</a>. Используйте его, чтобы вновь найти давно забытые истории, или для датамайнинга затравок к текстовым ИИ-играм.")
+		add("p", dl_options, "Рейтинги, названия и описания историй не учитываются. Этот поиск полагается только на содержимое историй. Нейросеть SPLADEv2 используется для представления историй в виде эмбеддингов. Больше технических деталей можно найти в <a href=\"https://github.com/a0346f102085fe9f/IAS2\">репозитории на GitHub</a>.")
+		add("p", dl_options, "Нажмите на одну из кнопок ниже.")
+		add("div", dl_options).style.height = "2em"
+
+		// You can open these URLs inside your browser to get a file listing
+		var ponyfiction_base_url =	"https://w3s.link/ipfs/QmRsDPtt411oq6qAqDRsZ9GEq414nGogS5nPxhnJvqtjJR"
+
+		add("h3", dl_options, "PONYFICTION").title = "Ponyfiction 20230101"
+		add("hr", dl_options)
+
+		add_index(ponyfiction_base_url + "/Ponyfiction", "<h3>ИНДЕКС А</h3><div>Годы 2012-2023</div><div>[163M]</div>", ponyfiction_link_fn)
+
+		function ponyfiction_link_fn(title) {
+			var id = title.split(" ").pop().slice(0, -4)
+			return "[ <a href=\"https://ponyfiction.org/story/" + id + "\">Ponyfiction</a> ]"
+		}
+	</script>
+</body>
+</html>
