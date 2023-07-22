@@ -10,9 +10,20 @@ Thanks go out to the authors of:
 - Fimfarchive, Fimfetch and Fimfiction itself
 
 # Technical challenges: context length
-SPLADE v2 network takes at most 512 tokens, but most stories tokenize into 30000+ tokens. For a document that is larger than 512 tokens, the network is given 512 tokens at a time and the resulting vectors are combined using a sum operation.
+SPLADE v2 network takes at most 512 tokens, but most stories tokenize into 30000+ tokens. For a document that is larger than 512 tokens, the network is given 512 tokens at a time and the resulting vectors are combined using proximity pooling.
 
 The network will never see the start and the end of the story within the same context.
+
+Proximity pooling sums the score for every individual token and adds a proximity bonus, which is a product of the score of a given token in a given slice, with its score in every other slice, weighted with a falloff matrix:
+
+```
+# Falloff matrix for three slices
+[[0.0, 0.5, 0.25],
+ [0.0, 0.0, 0.5],
+ [0.0, 0.0, 0.0]]
+```
+
+In this way, a document that has `[twilight, twilight, ---, ---, ---]` will score higher than `[twilight, ---, ---, ---, twilight]` for `twilight`.
 
 # Technical challenges: query network
 You are _supposed_ to run user queries through SPLADE v2 to expand them:
