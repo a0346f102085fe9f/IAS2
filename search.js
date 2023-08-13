@@ -1,243 +1,159 @@
 "use strict";
 
-var tokenizer = new BertTokenizer()
-
-var input = null
-var disp = null
-var results = []
-var results_div = null
-var more = null
-var search_timeout = -1
-
-function init_search() {
-	var main = document.body.children[1]
-
-	input = add("input", main)
-
-	input.type = "text"
-	input.placeholder = "Search..."
-	input.oninput = search_timeout_reset
-
-	disp = add("div", main, "Protip: syntax like -word, 5*word, -5*word is supported.") 
-
-	disp.classList.add("breakdown")
-
-	results_div = add("div", main)
-	more = add("button", main, "Show 100 more")
-	more.classList.add("hide")
-
-	more.onclick = function() {
-		show_more_results(100)
-	}
-}
-
-function search_timeout_reset() {
-	results_div.innerHTML = ""
-	more.classList.add("hide")
-
-	clearTimeout(search_timeout)
-	search_timeout = setTimeout(run_search, 500)
-}
-
-function run_search() {
-	var query = input.value
-	var qtvec = tvec(parse(query))
-
-	disp.innerHTML = tvecstr(qtvec)
-
-	results = find_similar_query( imagine_idx_entry(qtvec) )
-
-	more.classList.remove("hide")
-	add("div", results_div, "<br>SEARCHBOX QUERY:")
-	show_more_results(100)
-}
-
-function show_more_results(number) {
-	if (number > results.length)
-		number = results.length
-
-	for (var i = 0; i < number; i++)
-		display_result(results.shift())
-}
-
-var link_fn = null
-
-function set_link_fn(fn) {
-	link_fn = fn
-}
-
-// Turn token IDs to words and discard anything that starts with a ▁
-function predict_best_pretty(tokens) {
-	var words = []
-
-	while (words.length < 50 && tokens.length > 0) {
-		var word = tokenizer.convertIdsToTokens( [ tokens.shift().token ] )[0]
-
-		if (word.startsWith("##"))
-			continue
-
-		words.push(word)
-	}
-
-	return "[ " + words.join(", ") + " ]"
-}
-
-function display_result(entry) {
-	var details = add("details", results_div)
-	var summary = add("summary", details, entry.title)
-	var links = add("div", details, link_fn(entry.title))
-	var about = add("div", details)
-	var description = add("div", about, "Best described with: " + predict_best_pretty(predict_best_query(entry.title)))
-	add("br", about)
-	var more_tf_idf = add("button", about, "Find similar TF-IDF")
-	var more = add("button", about, "Find similar")
-	more.classList.add("flr")
-	more_tf_idf.classList.add("flr")
-	var score = add("div", about, "Score: " + Math.round(entry.score * 100) + "%")
-	add("br", about)
-
-	if (entry.is_stray) {
-		summary.classList.add("stray")
-		summary.title = "At least some of the keywords only implied"
-	}
-
-	more.onclick = function() {
-		results = find_similar_to(entry.title)
-		results_div.innerHTML = ""
-		add("div", results_div, "<br>FIND SIMILAR QUERY:")
-		show_more_results(100)
-	}
-
-	more_tf_idf.onclick = function() {
-		results = find_similar_to(entry.title, true)
-		results_div.innerHTML = ""
-		add("div", results_div, "<br>TF-IDF FIND SIMILAR QUERY:")
-		show_more_results(100)
-	}
-}
-
-
 //
-// EXPRESSION PARSER
+// IAS2.1
+// Search Internals
 //
 
-// Stage 1: search-and-replace simplify
-// Stage 2: split by spaces
-// Stage 3: extract weights
-function parse(expr) {
-	var simp_rxp_1 = /\s*\*\s*/g
-	var simp_rxp_2 = /-\s*/g
-	var simple = expr.replace(simp_rxp_1, "*").replace(simp_rxp_2, "-")
+var idx = {}
+var base_url = ""
 
-	var tokens = simple.split(" ")
-	var vec = {}
-
-	for (var token of tokens) {
-		if (token === "") continue
-
-		var k = 1.0 // default k
-
-		if (token.startsWith("-")) {
-			k = -k
-			token = token.slice(1)
-		}
-
-		var pieces = token.split("*")
-		var word = token
-
-		if (pieces.length > 1) {
-			var kk = parseFloat(pieces[0])
-
-			if ( isNaN(kk) ) {
-				// Nothing
-			} else {
-				pieces.shift()
-				word = pieces.join("*")
-				k = k * kk
-			}
-		}
-
-		if (word in vec === false)
-			vec[word] = 0.0
-
-		vec[word] += k
-	}
-
-	return vec
+function set_base_url(url) {
+	base_url = url
 }
 
-// Takes this:
-// { semiconductors: 1, lobsters: -1 }
-// Produces this:
-// { 2015: 0, 20681: 1, 27940: -1 }
-function tvec(vec) {
-	var tvec = {}
-
-	for (var word in vec) {
-		var weight = vec[word]
-		var tokens = tokenizer.tokenize(word)
-
-		for (var token of tokens) {
-			token = token + "x" // A hack to preserve ordering
-
-			if (token in tvec === false)
-				tvec[token] = 0.0
-
-			tvec[token] += weight
-		}
+function search_init() {
+	var idx_load = function(data) {
+		idx = data
+		ui_init()
 	}
 
-	return tvec
+	get(base_url + "idx.json", idx_load, "json")
 }
 
-function tvecstr(vec) {
+var cache = Array(30522)
+
+function ensure_row(i) {
+	if (i in cache) {
+		return cache[i]
+	}
+
+	cache[i] = null
+
+	var load_row_fn = function(data) {
+		cache[i] = new Uint8Array(data)
+		queue(run_search)
+	}
+
+	get(base_url + "token/" + i + ".gz", load_row_fn, "arraybuffer")
+}
+
+function ensure_rows(weights) {
+	var all_cached = true
+
+	for (var i in weights) {
+		if (!ensure_row(i))
+			all_cached = false
+	}
+
+	return all_cached
+}
+
+function decompress(i) {
+	var start = performance.now()
+	var decompressed = fflate.gunzipSync(cache[i])
+	var elapsed = performance.now() - start
+
+	console.log(elapsed)
+
+	return new Float32Array(decompressed.buffer)
+}
+
+// Takes token weights:
+// { 2015: 1, 20681: 1, 27940: -1 }
+function query_magnitude(weights) {
+	var sum = 0.0
+
+	for (var k in weights) {
+		var v = weights[k]
+		sum += v**2
+	}
+
+	return sum**0.5
+}
+
+// Runs a query
+// All documents that lack any of the query tokens are discarded
+function strict_intersect_query(weights, pre_sort_fn) {
 	var entries = []
 
-	for (var id in vec) {
-		var word = tokenizer.convertIdsToTokens([parseInt(id)])[0].replace("##", "_")
-
-		entries.push(word + ": " + vec[id])
+	for (var title in idx) {
+		entries.push({
+			title: title,
+			score: 0.0,
+			is_stray: false,
+			drop: false
+		})
 	}
 
-	return "{ " + entries.join(", ") + " }"
-}
+	for (var id in weights) {
+		var scores = decompress(id)
+		var k = weights[id]
 
-
-//
-// SEARCH STARTUP SEQUENCE
-//
-// Track three XHR downloads
-// A little messy
-function download_index(url) {
-	var done_alerts = 0
-
-	function done_alert() {
-		done_alerts++
-
-		if (done_alerts === 3) {
-			document.body.children[0].innerHTML = ""
-			populate_views()
-			build_total_sums()
-			init_search()
+		for (var i = 0; i < entries.length; i++) {
+			if (scores[i] > 0.0) {
+				entries[i].score += scores[i] * k
+			} else if (scores[i] < 0.0) {
+				entries[i].score -= scores[i] * k
+				entries[i].is_stray = true
+			} else {
+				entries[i].drop = true
+			}
 		}
 	}
 
-	var load_fn_1 = function(response) {
-		idx = response
-		done_alert()
+	var query_mag = query_magnitude(weights)
+	var total_mag = 0.0
+	var matches = []
+
+	for (var i = 0; i < entries.length; i++) {
+		var entry = entries[i]
+
+		if (!entry.drop) {
+			var mag = idx[entry.title].magnitude
+
+			entry.magnitude = mag
+			entry.score = entry.score / (mag * query_mag)
+			matches.push(entry)
+
+			total_mag += mag
+		}
 	}
 
-	var load_fn_2 = function(response) {
-		datatape_k = response
-		done_alert()
+	if (pre_sort_fn)
+		pre_sort_fn(matches, total_mag)
+
+	var sort_fn = function(a, b) {
+		return b.score - a.score
 	}
 
-	var load_fn_3 = function(response) {
-		datatape_v = response
-		done_alert()
+	matches.sort(sort_fn)
+
+	return matches
+}
+
+// All else being equal, prefer larger documents
+function prefer_longer_fn(matches, total_mag) {
+	var acc = 0.0
+
+	for (var i = 0; i < matches.length; i++) {
+		acc += matches[i].score *= (matches[i].magnitude / total_mag)
 	}
 
-	get(url + "/idx.json", load_fn_1, "json")
-	get(url + "/datatape_k.bin", load_fn_2, "arraybuffer")
-	get(url + "/datatape_v.json", load_fn_3, "arraybuffer")
+	//for (var i = 0; i < matches.length; i++) {
+	//	matches[i].score /= acc
+	//}
+}
+
+// All else being equal, prefer shorter documents
+function prefer_shorter_fn(matches, total_mag) {
+	var acc = 0.0
+
+	for (var i = 0; i < matches.length; i++) {
+		acc += matches[i].score /= (matches[i].magnitude / total_mag)
+	}
+
+	//for (var i = 0; i < matches.length; i++) {
+	//	matches[i].score /= acc
+	//}
 }

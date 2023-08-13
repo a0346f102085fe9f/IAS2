@@ -10,32 +10,24 @@ main {
 }
 
 details {
-	border-top: dotted;
-	border-width: 1px;
-	margin-bottom: .1em;
+	border-left: .25rem solid gray;
+	padding-left: .25rem;
 }
 
 summary {
-	font-size: 12pt;
+	list-style: none;
 	cursor: pointer;
-	position: relative;
-	padding-right: 1em;
 }
 
-summary::marker {
-	content: none;
+fieldset {
+	display: inline-block;
+	padding: 0;
+	margin: .25rem 0rem;
+	border: none;
 }
 
-summary::after {
-	position: absolute;
-	right: 0px;
-	top: -8pt;
-	content: "▿";
-	font-size: 20pt;
-}
-
-details[open] summary::after {
-	content: "▵";
+legend {
+	padding: 0;
 }
 
 button {
@@ -52,13 +44,35 @@ button:hover {
 	color: white;
 }
 
-input {
+input[type="text"] {
 	box-sizing: border-box;
 
 	width: 100%;
 
 	font-family: inherit;
 	font-size: inherit;
+
+	margin: .3rem 0rem;
+}
+
+input[type="radio"] {
+	display: none;
+}
+
+input[type="radio"] + div {
+	background-color: inherit;
+	border: 1px solid white;
+	outline: 1px solid black;
+	margin: .15em;
+	padding: .1em .33em;
+	cursor: pointer;
+	text-align: left;
+	display: inline-block;
+}
+
+input[type="radio"]:hover + div, input[type="radio"]:checked + div {
+	background-color: black;
+	color: white;
 }
 
 table {
@@ -67,7 +81,7 @@ table {
 }
 
 td {
-	padding-right: 2em;
+	padding-right: 2rem;
 }
 
 hr {
@@ -86,12 +100,56 @@ a:hover {
 	text-decoration: underline;
 }
 
-.search_result {
-	line-height: 1.25;
+.query_stats {
+	padding: 1rem 0rem .25rem;
 }
 
-.breakdown {
+.tokens {
 	color: gray;
+	border-left: .25rem solid gray;
+	padding-left: .25rem;
+}
+
+details.advanced {
+	border-left: .25rem solid #DB9216;
+	padding-left: .25rem;
+}
+
+.advanced summary {
+	color: gray;
+}
+
+form h3 {
+	margin: .5rem 0rem;
+}
+
+.search_results details {
+	border-top: 1px dotted slategray;
+	border-left: .25rem solid #DB9216;
+	padding: .25rem;
+}
+
+.search_results details:nth-of-type(2n) {
+	border-color: slategray;
+}
+
+.search_results summary {
+	font-size: 12pt;
+	position: relative;
+	padding-right: 1em;
+}
+
+.search_results details[open] summary::after {
+	content: "▵";
+}
+
+.search_results summary::after {
+	position: absolute;
+	right: 0px;
+	top: -8pt;
+	content: "▿";
+	font-size: 20pt;
+	color: slategray;
 }
 
 .stray {
@@ -108,4 +166,32 @@ a:hover {
 
 .clickable {
 	cursor: pointer;
+}
+
+.log {
+	position: fixed;
+	bottom: 0px;
+	right: 0px;
+
+	background-color: black;
+	color: white;
+
+	opacity: 0.5;
+}
+
+.log_hide::after {
+	content: "↓";
+	padding: .2rem;
+}
+
+.log_hide:hover::after {
+	content: unset;
+}
+
+.log_hide > * {
+	display: none;
+}
+
+.log_hide:hover > * {
+	display: table-row;
 }

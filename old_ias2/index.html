@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Search R&D</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<script type="text/javascript" src="utils.js"></script>
+	<script type="text/javascript" src="splade_tools.js"></script>
+	<script type="text/javascript" src="Tokenizer/vocab_en.js"></script>
+	<script type="text/javascript" src="Tokenizer/wordpiecetokenizer.js"></script>
+	<script type="text/javascript" src="Tokenizer/bert-tokenizer.js"></script>
+	<script type="text/javascript" src="search.js"></script>
+</head>
+<body>
+	<table></table>
+
+	<main>
+		<noscript>JavaScript required, sorry.</noscript>
+	</main>
+
+	<script type="text/javascript">
+		var dl_options = add("div", document.body.children[1], "")
+
+		function add_index(url, description, link_fn) {
+			var button = add("button", dl_options, description)
+
+			button.onclick = function() {
+				dl_options.remove()
+				set_link_fn(link_fn)
+				download_index(url)
+			}
+		}
+
+		add("div", dl_options).style.height = "2em"
+		add("div", dl_options, "<b>Welcome!</b>")
+		add("p", dl_options, "This is an alternative search engine for Fimfiction/Fimfetch, poneb.in, ponepaste and also <a href=\"index_ru.html\">Ponyfiction</a>. Use it to rediscover long-forgotten stories or to datamine for prompts to use in AI storytelling games.")
+		add("p", dl_options, "Story ratings, titles and descriptions are not considered. This search relies only on the contents of the story. SPLADEv2 neural network is used to produce embeddings out of stories. See the <a href=\"https://github.com/a0346f102085fe9f/IAS2\">GitHub page</a> for more technical details.")
+		add("p", dl_options, "Click one of the buttons below.")
+		add("div", dl_options).style.height = "2em"
+
+		// You can open these URLs inside your browser to get a file listing
+		var ponebin_base_url = 		"https://w3s.link/ipfs/QmQzrJihyHZz8zVPKtL5oVjWgpGBuwiSXKtLdPakX4pF1K"
+		var fimfarchive_base_url = 	"https://w3s.link/ipfs/Qmf4sNcGbbuC9ic83dpT9UMjn1jto6qDoGJjHeQUQLk8qa"
+		var ponepaste_base_url = 	"https://w3s.link/ipfs/QmZ5oduxYNspqQBsbmKGRJ4aSu4St3JB5cszKSErHF4pJG"
+
+		add("h3", dl_options, "PONEB.IN")
+		add("hr", dl_options)
+
+		add_index(ponebin_base_url + "/IndexA", "<h3>INDEX A</h3><div>Years 2009-2013</div><div>[148M]</div>", ponebin_link_fn)
+		add_index(ponebin_base_url + "/IndexB", "<h3>INDEX B</h3><div>Years 2014-2017</div><div>[239M]</div>", ponebin_link_fn)
+		add_index(ponebin_base_url + "/IndexC", "<h3>INDEX C</h3><div>Years 2018-2020</div><div>[62.2M]</div>", ponebin_link_fn)
+
+		add("div", dl_options).style.height = "2em"
+		add("h3", dl_options, "PONEPASTE").title = "Ponepaste dump from 2023.02.15"
+		add("hr", dl_options)
+
+		add_index(ponepaste_base_url + "/Ponepaste", "<h3>INDEX A</h3><div>Years 2020-2023</div><div>[68.9M]</div>", ponepaste_link_fn)
+
+		add("div", dl_options).style.height = "2em"
+		add("h3", dl_options, "FIMFARCHIVE").title = "Fimfarchive 20230601"
+		add("hr", dl_options)
+
+		add_index(fimfarchive_base_url + "/Fimfarchive 1 30k", "<h3>INDEX A</h3><div>Aug 2011-Nov 2012</div><div>[448M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 2 30k", "<h3>INDEX B</h3><div>Nov 2012-Sep 2013</div><div>[414M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 3 30k", "<h3>INDEX C</h3><div>Sep 2013-Jul 2014</div><div>[366M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 4 30k", "<h3>INDEX D</h3><div>Jul 2014-Aug 2015</div><div>[369M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 5 30k", "<h3>INDEX E</h3><div>Aug 2015-Feb 2017</div><div>[379M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 6 30k", "<h3>INDEX F</h3><div>Feb 2017-Aug 2019</div><div>[435M]</div>", fimfetch_link_fn)
+		add_index(fimfarchive_base_url + "/Fimfarchive 7 30k", "<h3>INDEX G</h3><div>Aug 2019-Jun 2023</div><div>[445M]</div>", fimfetch_link_fn)
+
+		function ponebin_link_fn(title) {
+			var id = title.slice(-12).slice(0, 8)
+			return "[ <a href=\"https://poneb.in/" + id + "\">poneb.in</a> ]"
+		}
+
+		function ponepaste_link_fn(title) {
+			var id = title.split("-").pop().slice(0, -4)
+			return "[ <a href=\"https://ponepaste.org/" + id + "\">Ponepaste</a> ]"
+		}
+
+		function fimfetch_link_fn(title) {
+			var id = title.split("-").pop().slice(0, -4)
+			return "[ <a href=\"https://fimfiction.net/story/" + id + "\">Fimfiction</a> ] [ <a href=\"https://fimfetch.net/story/" + id + "\">Fimfetch</a> ]"
+		}
+	</script>
+</body>
+</html>
